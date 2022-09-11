@@ -6,9 +6,9 @@
  * @flow strict-local
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
-import ReactNative, { Pressable, BackHandler, Vibration, Image } from "react-native";
+import ReactNative, { Pressable, BackHandler, Vibration, Image, TouchableHighlight, TextInput } from "react-native";
 
 
 import AppButton from "./Components/AppButton"
@@ -89,11 +89,85 @@ const HelpViewStyles = {
 }
 
 const AddView = () => {
+  const NoteText = useRef('');
+  const [NoteTextState, SetNoteText] = useState('');
+
+  function ReturnToMainView() {
+    global.ScreenView = 0;
+  }
+
+  function CreateNote() {
+    if(NoteText.current.length > 0) {
+      global.Notes.push(NoteText.current);
+      global.Save();
+      global.ScreenView = 0;
+    }
+  }
+
+  useEffect(()=>{
+    global.ActionQueue.push(ReturnToMainView);
+
+    return ()=>{
+      global.ActionQueue.splice(global.ActionQueue.length-1);
+    }
+  }, [])
+
   return (
     <View style={{...styles.mainContainer, }}> 
-
+      <View style={addViewStyles.flexbox}>
+        <Text style={{color: '#ffc14f', fontWeight: '300', fontSize: 22, justifySelf: 'center', alignSelf: 'center', marginBottom: 8, marginTop: 8}}>Create new note</Text>
+        <View style={addViewStyles.card}>
+          <TextInput multiline style={addViewStyles.input} onChangeText={(value)=>{NoteText.current = value; SetNoteText(value);}} placeholder={"Enter text..."}/>
+        </View>
+        <View style={addViewStyles.buttons}>
+        <TouchableHighlight onPress={CreateNote} style={{...addViewStyles.highlight, backgroundColor: ((NoteTextState.length == 0) ? '#666666' : '#4b9d66')}} disabled={(NoteTextState.length == 0)}>
+            <Text style={addViewStyles.text}>Create</Text>
+          </TouchableHighlight>
+          <TouchableHighlight onPress={ReturnToMainView} style={addViewStyles.highlight} activeOpacity={0.6}>
+            <Text style={{...addViewStyles.text, color: '#ff5d5d'}}>Cancel</Text>
+          </TouchableHighlight>
+        </View>
+      </View>
     </View>
   )
+}
+
+const addViewStyles = {
+  flexbox: {
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  card: {
+    display: 'flex',
+    backgroundColor: '#292929',
+    borderRadius: 18,
+    marginTop: 16,
+    width: '100%',
+    height: 'auto',
+    overflow: 'hidden'
+  },
+  buttons: {
+    display: 'flex',
+    flexDirection: 'row-reverse',
+    paddingTop: 16,
+    marginLeft: 16
+  },
+  input: {
+    minHeight: 150,
+    maxHeight: 300,
+    flexGrow: 1, 
+    textAlignVertical: 'top', 
+    padding: 8, 
+    paddingRight: 0, 
+  },
+  text: {
+    padding: 8,
+    paddingRight: 16,
+    paddingLeft: 16
+  },
+  highlight: {
+    borderRadius: 16
+  }
 }
 
 const MainView = () => {
@@ -106,12 +180,11 @@ const MainView = () => {
 
   function OpenNewNoteView() {
     console.log("Creating new note");
-    /*const old = global.ScreenView;
-    global.ActionQueue.push(()=>{global.ScreenView = old;});
-    global.ScreenView = 2;*/
 
-    global.Notes.push("");
-    global.StartEditMode();
+    global.ScreenView = 2;
+
+    //global.Notes.push("");
+    //global.StartEditMode();
   }
 
   function RemoveSelectedNotes() {
@@ -160,6 +233,17 @@ const MainView = () => {
 const PushModule = ReactNative.NativeModules.PushModule;
 
 global.Save = ()=>{
+  global.Notes.forEach((el, idx) => {
+      if(el == '') {
+      let rem = global.Notes.splice(idx, 1);
+      rem.forEach((el, idx) => {
+        if(idx > 0 && el != '')
+          global.Notes.push(el);
+      });
+      return;
+    }
+  });
+
   PushModule.Save(JSON.stringify(global.Notes));
 }
 
