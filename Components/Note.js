@@ -95,7 +95,7 @@ export default ({Text, ID, onApply}) => {
             </TouchableHighlight>
             : 
             <View style={{display: 'flex', flexDirection: 'row', flexGrow: 1}}>
-              <ReactNative.TextInput style={{flexGrow: 1, textAlignVertical: 'top', padding: 8, paddingRight: 0, minHeight: 60,}} multiline onChangeText={(newText)=>{Text.current = newText; onApply(Text.current, ID)}}>{Text.current}</ReactNative.TextInput>
+              <ReactNative.TextInput style={{width: '80%', flexGrow: 1, textAlignVertical: 'top', padding: 8, paddingRight: 0, minHeight: 60,}} multiline onChangeText={(newText)=>{Text.current = newText; onApply(Text.current, ID)}}>{Text.current}</ReactNative.TextInput>
               <View style={{minWidth: 50, height: 'auto', justifyItems: 'center', alignItems: 'center', justifyContent: 'center', alignContent: 'center'}}>
                 <CheckBox
                 checked={isSelected.current}
